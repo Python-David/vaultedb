@@ -85,4 +85,5 @@ class DocumentStorage:
 
     def list(self) -> List[dict]:
         """Return all stored documents."""
+        self._load()  # Ensure latest file data is read
         return list(self.data.values())
