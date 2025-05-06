@@ -82,4 +82,4 @@ This is a solo build sprint right now, but if you're passionate about privacy, o
 
 ## 📣 Stay in the loop
 
-Follow the journey on LinkedIn or star this repo to support development.
+Follow the journey on [LinkedIn](https://www.linkedin.com/in/python-david/) or star this repo to support development.
