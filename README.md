@@ -56,27 +56,11 @@ pytest
 
 ```
 vaultdb/
-├── vaultdb/                # Core package
-│   ├── __init__.py
-│   ├── storage.py          # Handles file I/O (Phase 1)
-│   ├── crypto.py           # Encryption functions (Phase 2)
-│   ├── engine.py           # Core document DB logic
-│   ├── query.py            # Field-value filtering (Phase 2+)
-│   ├── api.py              # User-facing API (Phase 3)
-│   ├── config.py           # Passphrase and key handling
-│   └── errors.py           # Custom exceptions
-├── tests/                  # Unit tests using pytest
-│   ├── test_engine.py
-│   ├── test_crypto.py
-│   └── fixtures/
-├── demo/                   # Interactive notebooks and usage demos
-│   └── notebook.ipynb
-├── docs/                   # Markdown + diagrams per module
-│   └── storage.md
-├── pyproject.toml          # Python packaging config
-├── requirements.txt        # Dev/test dependencies
-├── README.md               # Project overview and usage
-└── LICENSE                 # MIT License
+├── storage.py          # Core storage engine
+├── test_storage.py     # Unit tests for storage
+├── storage.md          # Component-level documentation
+├── LICENSE
+├── README.md
 ```
 
 ## 🚧 Roadmap (MVP)
