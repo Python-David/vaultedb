@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# VS Code / PyCharm / IDEs
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Test results
+htmlcov/
+coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.pytest_cache/
+
+# Log files
+*.log
+
+# Unit test temp files
+*.tmp
+*.bak
+
+# Built distributions
+build/
+dist/
+*.egg-info/
+
+# Local storage/test files
+*.db
+*.sqlite
+test*.json
+
+# VaultDB local files
+*.vault
+vaultdb.json

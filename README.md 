@@ -1,0 +1,101 @@
+# 🔐 VaultDB
+
+**VaultDB** is a zero-config, Python-native, document database that stores all your data encrypted by default. Built for developers who care about privacy, speed, and simplicity.
+
+---
+
+## ✨ Features
+
+- 📦 JSON-based document storage
+- 🔐 End-to-end encryption (coming in Phase 2)
+- 🧠 Human-readable API, built with Python in mind
+- 🧪 Tested with `pytest`
+- 💥 Atomic file writes to prevent corruption
+- 📁 Local-first: no server required
+- 🔍 Simple querying (planned)
+- 🔑 Key management system (planned)
+
+---
+
+## 📦 Installation
+
+Coming soon to PyPI. For now, clone and use locally:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/vaultdb.git
+cd vaultdb
+```
+
+## 🧠 Usage (Phase 1)
+
+```python
+from vaultdb.storage import DocumentStorage
+
+store = DocumentStorage("vault.json")
+
+# Insert a document
+doc_id = store.insert({"name": "Alice"})
+
+# Fetch it back
+doc = store.get(doc_id)
+
+# Update it
+store.update(doc_id, {"age": 30})
+
+# Delete it
+store.delete(doc_id)
+```
+
+## 🧪 Running Tests
+
+```bash
+pytest
+```
+
+## 📂 Project Structure
+
+```
+vaultdb/
+├── vaultdb/                # Core package
+│   ├── __init__.py
+│   ├── storage.py          # Handles file I/O (Phase 1)
+│   ├── crypto.py           # Encryption functions (Phase 2)
+│   ├── engine.py           # Core document DB logic
+│   ├── query.py            # Field-value filtering (Phase 2+)
+│   ├── api.py              # User-facing API (Phase 3)
+│   ├── config.py           # Passphrase and key handling
+│   └── errors.py           # Custom exceptions
+├── tests/                  # Unit tests using pytest
+│   ├── test_engine.py
+│   ├── test_crypto.py
+│   └── fixtures/
+├── demo/                   # Interactive notebooks and usage demos
+│   └── notebook.ipynb
+├── docs/                   # Markdown + diagrams per module
+│   └── storage.md
+├── pyproject.toml          # Python packaging config
+├── requirements.txt        # Dev/test dependencies
+├── README.md               # Project overview and usage
+└── LICENSE                 # MIT License
+```
+
+## 🚧 Roadmap (MVP)
+
+| Phase | Goal |
+|-------|------|
+| 1 | ✅ Core storage engine (plaintext, atomic, JSON) |
+| 2 | 🔐 Transparent encryption, key handling, CLI |
+| 3 | 🧪 Notebook/demo, PyPI-ready package |
+| 4 | 🚀 Public launch, social push, waitlist |
+
+## 🛡 License
+
+This project is licensed under the MIT License – see LICENSE for details.
+
+## 👋 Contributing
+
+This is a solo build sprint right now, but if you're passionate about privacy, open-source, or Python — feel free to open an issue or get in touch.
+
+## 📣 Stay in the loop
+
+Follow the journey on LinkedIn or star this repo to support development.
