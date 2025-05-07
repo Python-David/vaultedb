@@ -1,7 +1,6 @@
 import os
 import json
 import sys
-import uuid
 import tempfile
 import pytest
 

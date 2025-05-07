@@ -14,15 +14,12 @@ from typing import Dict, Union
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from vaultdb.errors import CryptoError
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 import base64
-
-
-class CryptoError(Exception):
-    pass
 
 
 def generate_key(passphrase: str, salt: bytes, iterations: int = 100_000) -> bytes:

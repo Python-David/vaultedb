@@ -7,8 +7,8 @@ from vaultdb.crypto import (
     decrypt_document,
     encrypt_with_salt,
     decrypt_with_salt,
-    CryptoError,
 )
+from vaultdb.errors import CryptoError
 
 
 @pytest.fixture

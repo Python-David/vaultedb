@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb.storage import DocumentStorage, StorageError
-from vaultdb.errors import InvalidDocumentError, DuplicateIDError
+from vaultdb.storage import DocumentStorage
+from vaultdb.errors import InvalidDocumentError, DuplicateIDError, StorageError
 
 
 @pytest.fixture

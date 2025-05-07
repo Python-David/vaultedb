@@ -3,11 +3,7 @@ import os
 import tempfile
 from typing import Dict, Optional, List
 import uuid
-from vaultdb.errors import InvalidDocumentError, DuplicateIDError
-
-
-class StorageError(Exception):
-    pass
+from vaultdb.errors import InvalidDocumentError, DuplicateIDError, StorageError
 
 
 class DocumentStorage:

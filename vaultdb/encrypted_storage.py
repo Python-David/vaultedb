@@ -87,3 +87,30 @@ class EncryptedStorage:
                 continue
 
         return docs
+
+    def find(self, filter: dict) -> List[dict]:
+        """
+        Finds documents matching all key-value pairs in the given filter.
+
+        Args:
+            filter (dict): A dictionary of field-value pairs to match.
+                           Only documents containing all matching fields with equal values will be returned.
+
+        Returns:
+            List[dict]: A list of decrypted documents that match the filter.
+
+        Raises:
+            InvalidDocumentError: If the filter is not a dictionary.
+            CryptoError: If decryption fails or data is malformed and strict mode is enforced.
+        """
+        if not isinstance(filter, dict):
+            raise InvalidDocumentError("Filter must be a dictionary.")
+
+        all_docs = self.list(strict=True)
+        results = []
+
+        for doc in all_docs:
+            if all(doc.get(k) == v for k, v in filter.items()):
+                results.append(doc)
+
+        return results
