@@ -1,15 +1,43 @@
 import json
 import os
 import tempfile
+from datetime import datetime, timezone
 from typing import Dict, Optional, List
 import uuid
 from vaultdb.errors import InvalidDocumentError, DuplicateIDError, StorageError
+from vaultdb.config import VAULTDB_VERSION
+
+
+class ProtectedMetaDict(dict):
+    _protected_keys = {"created_at", "vault_version"}
+    def __setitem__(self, key, value):
+        if key in self._protected_keys:
+            raise RuntimeError(f"'{key}' is read-only metadata")
+        super().__setitem__(key, value)
+
+    def update(self, *args, **kwargs):
+        for key in dict(*args, **kwargs):
+            if key in self._protected_keys:
+                raise RuntimeError(f"'{key}' is read-only metadata")
+        super().update(*args, **kwargs)
 
 
 class DocumentStorage:
     """
     Handles loading and saving encrypted documents to disk in JSON format.
-    Used as the low-level storage engine by VaultDB.
+    Used as the low-level storage engine by VaultDB. Now includes metadata for versioning and app context.
+
+    File schema:
+    {
+        "_meta": {
+            "vault_version": "1.0.0",
+            "created_at": "...",
+            "app_name": "..."
+        },
+        "documents": {
+            "abc123": {"_id": "abc123", "data": "..."}
+        }
+    }
 
     Responsibilities:
     - Read/write all documents to a single JSON file
@@ -20,13 +48,15 @@ class DocumentStorage:
     - Enforce unique _id per document
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, app_name: Optional[str] = None):
         self.path = path
+        self.meta: ProtectedMetaDict = ProtectedMetaDict()
         self.data: Dict[str, dict] = {}
-        self._load()
+        self._load(app_name)
 
-    def _load(self):
+    def _load(self, app_name: Optional[str]):
         if not os.path.exists(self.path):
+            self._initialize_meta(app_name)
             self.data = {}
             return
 
@@ -34,16 +64,37 @@ class DocumentStorage:
             with open(self.path, "r", encoding="utf-8") as f:
                 content = f.read().strip()
                 if not content:
+                    self._initialize_meta(app_name)
                     self.data = {}
+                    return
+
+                raw = json.loads(content)
+                if "_meta" in raw and "documents" in raw:
+                    self.meta = ProtectedMetaDict(raw["_meta"])
+                    self.data = raw["documents"]
                 else:
-                    self.data = json.loads(content)
+                    raise StorageError("Vault file is not in supported format (missing _meta or documents).")
+
         except (json.JSONDecodeError, IOError) as e:
             raise StorageError(f"Failed to load storage file: {e}")
 
+    def _initialize_meta(self, app_name: Optional[str]):
+        meta = {
+            "vault_version": VAULTDB_VERSION,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        if app_name:
+            meta["app_name"] = app_name
+        self.meta = ProtectedMetaDict(meta)
+
     def _atomic_write(self):
         try:
+            file_content = {
+                "_meta": dict(self.meta),
+                "documents": self.data
+            }
             with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(self.path), delete=False) as tf:
-                json.dump(self.data, tf, indent=2)
+                json.dump(file_content, tf, indent=2)
                 temp_path = tf.name
             os.replace(temp_path, self.path)
         except Exception as e:
@@ -80,6 +131,5 @@ class DocumentStorage:
         return False
 
     def list(self) -> List[dict]:
-        """Return all stored documents."""
-        self._load()  # Ensure latest file data is read
+        self._load(app_name=None)  # reload to ensure freshness
         return list(self.data.values())

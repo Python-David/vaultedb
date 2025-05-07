@@ -12,7 +12,7 @@ import tempfile
 
 @pytest.fixture
 def vault():
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
+    with tempfile.NamedTemporaryFile(suffix=".vault", delete=False) as tf:
         path = tf.name
     salt = generate_salt()
     key = generate_key("find-test-passphrase", salt)
@@ -65,7 +65,7 @@ def test_find_skips_corrupt_data(vault):
     with open(vault.store.path, "r+", encoding="utf-8") as f:
         import json
         raw = json.load(f)
-        raw[doc_id]["data"] = "!!not-valid-base64"
+        raw["documents"][doc_id]["data"] = "!@#$%^&*()"
         f.seek(0)
         json.dump(raw, f)
         f.truncate()

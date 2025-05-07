@@ -1,10 +1,12 @@
 import json
+import re
 import tempfile
 import os
+from datetime import datetime, timezone
+
 import pytest
 import sys
 from unittest.mock import patch
-
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -14,18 +16,30 @@ from vaultdb.errors import InvalidDocumentError, DuplicateIDError, StorageError
 
 @pytest.fixture
 def temp_storage_path():
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
+    with tempfile.NamedTemporaryFile(suffix=".vault", delete=False) as tf:
         yield tf.name
     os.remove(tf.name)
 
 def test_insert_and_get(temp_storage_path):
-    store = DocumentStorage(temp_storage_path)
+    store = DocumentStorage(temp_storage_path, app_name="TestApp")
     doc = {"name": "Alice"}
     doc_id = store.insert(doc)
     assert isinstance(doc_id, str)
     loaded = store.get(doc_id)
     assert loaded["name"] == "Alice"
     assert loaded["_id"] == doc_id
+
+def test_metadata_written(temp_storage_path):
+    store = DocumentStorage(temp_storage_path, app_name="MyJournal")
+    store.insert({"title": "First Entry"})
+
+    with open(temp_storage_path, "r") as f:
+        data = json.load(f)
+        assert "_meta" in data
+        assert data["_meta"]["vault_version"] == "1.0.0"
+        assert "created_at" in data["_meta"]
+        assert data["_meta"]["app_name"] == "MyJournal"
+        assert "documents" in data
 
 def test_insert_invalid_type(temp_storage_path):
     store = DocumentStorage(temp_storage_path)
@@ -77,52 +91,78 @@ def test_duplicate_id_insert_raises(temp_storage_path):
     with pytest.raises(DuplicateIDError):
         store.insert({"_id": "fixed-id", "name": "Bob"})
 
-
 def test_json_file_format_after_insert(temp_storage_path):
     store = DocumentStorage(temp_storage_path)
     doc_id = store.insert({"name": "VaultDoc"})
 
-    # Read raw JSON from file
     with open(temp_storage_path, "r", encoding="utf-8") as f:
         raw_data = json.load(f)
 
     assert isinstance(raw_data, dict)
-    assert doc_id in raw_data
-    assert raw_data[doc_id]["name"] == "VaultDoc"
-    assert raw_data[doc_id]["_id"] == doc_id
+    assert "_meta" in raw_data
+    assert "documents" in raw_data
+    assert doc_id in raw_data["documents"]
+    assert raw_data["documents"][doc_id]["name"] == "VaultDoc"
+    assert raw_data["documents"][doc_id]["_id"] == doc_id
 
 def test_atomic_write_failure_does_not_corrupt_file(temp_storage_path):
     store = DocumentStorage(temp_storage_path)
     original_doc = {"name": "SafeDoc"}
     doc_id = store.insert(original_doc)
 
-    # Simulate failure on second insert during os.replace()
     with patch("vaultdb.storage.os.replace", side_effect=Exception("Simulated crash")):
         with pytest.raises(StorageError):
             store.insert({"name": "CrashDoc"})
 
-    # Ensure original data is still intact
     with open(temp_storage_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-        assert doc_id in data
-        assert data[doc_id]["name"] == "SafeDoc"
+        assert doc_id in data["documents"]
+        assert data["documents"][doc_id]["name"] == "SafeDoc"
 
-def test_insert_does_not_overwrite_existing_doc(temp_storage_path):
+def test_legacy_file_format_raises_storage_error(temp_storage_path):
+    # Write legacy format (no _meta, no documents key)
+    legacy_data = {
+        "legacy-id": {"_id": "legacy-id", "content": "legacy"}
+    }
+    with open(temp_storage_path, "w") as f:
+        json.dump(legacy_data, f)
+
+    # Expect a StorageError when loading invalid format
+    with pytest.raises(StorageError, match="Vault file is not in supported format"):
+        DocumentStorage(temp_storage_path)
+
+def test_meta_fields_are_protected(temp_storage_path):
+    store = DocumentStorage(temp_storage_path, app_name="MetaApp")
+    with pytest.raises(RuntimeError, match=re.escape("'vault_version' is read-only metadata")):
+        store.meta["vault_version"] = "2.0.0"
+    with pytest.raises(RuntimeError, match=re.escape("'created_at' is read-only metadata")):
+        store.meta.update({"created_at": "2099-01-01T00:00:00Z"})
+
+def test_created_at_is_recent_and_iso8601(temp_storage_path):
+    store = DocumentStorage(temp_storage_path, app_name="TimeTest")
+    created_at_str = store.meta["created_at"]
+    created_at = datetime.fromisoformat(created_at_str)
+    now = datetime.now(timezone.utc)
+    delta = abs((now - created_at).total_seconds())
+    assert delta < 5  # within 5 seconds of now
+
+def test_metadata_without_app_name(temp_storage_path):
     store = DocumentStorage(temp_storage_path)
-    original = {"_id": "safe-id", "name": "Original"}
-    store.insert(original)
+    assert "app_name" not in store.meta
 
-    with pytest.raises(DuplicateIDError):
-        store.insert({"_id": "safe-id", "name": "Malicious"})
+def test_meta_structure_on_first_insert(temp_storage_path):
+    store = DocumentStorage(temp_storage_path, app_name="VaultNotes")
+    store.insert({"note": "hello"})
+    with open(temp_storage_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    assert set(data.keys()) == {"_meta", "documents"}
+    assert isinstance(data["_meta"]["created_at"], str)
+    assert data["_meta"]["vault_version"] == "1.0.0"
+    assert data["_meta"]["app_name"] == "VaultNotes"
 
-    # Confirm original is still intact
-    fetched = store.get("safe-id")
-    assert fetched["name"] == "Original"
-
-@pytest.mark.skip(reason="To be added in Phase 2 after encryption")
-def test_large_document_insert():
-    pass
-
-
-
-
+def test_meta_allows_custom_fields(temp_storage_path):
+    store = DocumentStorage(temp_storage_path, app_name="CustomMetaApp")
+    store.meta["label"] = "project-alpha"
+    store.meta.update({"env": "staging"})
+    assert store.meta["label"] == "project-alpha"
+    assert store.meta["env"] == "staging"

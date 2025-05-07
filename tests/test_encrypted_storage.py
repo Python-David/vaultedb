@@ -2,6 +2,8 @@ import os
 import json
 import sys
 import tempfile
+import warnings
+
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -12,7 +14,7 @@ from vaultdb.errors import InvalidDocumentError, DuplicateIDError
 
 @pytest.fixture
 def encrypted_store():
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
+    with tempfile.NamedTemporaryFile(suffix=".vault", delete=False) as tf:
         path = tf.name
     salt = generate_salt()
     key = generate_key("test-passphrase", salt)
@@ -74,7 +76,7 @@ def test_corrupt_data_strict_mode(encrypted_store):
     doc_id = encrypted_store.insert({"name": "Eve"})
     with open(encrypted_store.store.path, "r+", encoding="utf-8") as f:
         raw = json.load(f)
-        raw[doc_id]["data"] = "!@#$%^&*()"  # guaranteed invalid
+        raw["documents"][doc_id]["data"] = "!@#$%^&*()"  # guaranteed invalid
         f.seek(0)
         json.dump(raw, f)
         f.truncate()
@@ -85,10 +87,52 @@ def test_corrupt_data_non_strict_mode(encrypted_store):
     doc_id = encrypted_store.insert({"name": "Frank"})
     with open(encrypted_store.store.path, "r+", encoding="utf-8") as f:
         raw = json.load(f)
-        raw[doc_id]["data"] = "!@#$%^&*()"  # guaranteed invalid
+        raw["documents"][doc_id]["data"] = "!@#$%^&*()"  # guaranteed invalid
         f.seek(0)
         json.dump(raw, f)
         f.truncate()
     docs = encrypted_store.list(strict=False)
     assert isinstance(docs, list)
     assert len(docs) == 0  # corrupted doc is skipped
+
+def test_warns_if_non_vault_extension():
+    salt = generate_salt()
+    key = generate_key("warn-test", salt)
+
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tf:
+        non_vault_path = tf.name
+
+    try:
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            _ = EncryptedStorage(non_vault_path, key)
+
+            assert any(
+                issubclass(warning.category, UserWarning) and
+                "recommended to use a `.vault` extension" in str(warning.message)
+                for warning in w
+            )
+    finally:
+        os.remove(non_vault_path)
+
+def test_does_not_warn_with_vault_extension():
+    salt = generate_salt()
+    key = generate_key("safe-test", salt)
+
+    with tempfile.NamedTemporaryFile(suffix=".vault", delete=False) as tf:
+        vault_path = tf.name
+
+    try:
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            _ = EncryptedStorage(vault_path, key)
+
+            assert not any(
+                issubclass(warning.category, UserWarning) and
+                ".vault extension" in str(warning.message)
+                for warning in w
+            )
+    finally:
+        os.remove(vault_path)

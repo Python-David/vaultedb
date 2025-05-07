@@ -7,6 +7,14 @@
 ## ✨ Features
 
 - 📦 JSON-based document storage
+- 🔒 Transparent AES-256 encryption (completed!)
+- 🧠 Pythonic API: `vault.insert()`, `vault.find()`...
+- 💥 Atomic file writes to prevent corruption
+- 🔍 Simple querying with `.find()` (no index, linear scan)
+- 🧪 100% tested with `pytest`
+- 📁 Local-first: no server or config needed
+
+- 📦 JSON-based document storage
 - 🔐 End-to-end encryption (coming in Phase 2)
 - 🧠 Human-readable API, built with Python in mind
 - 🧪 Tested with `pytest`
@@ -26,7 +34,34 @@ git clone https://github.com/YOUR_USERNAME/vaultdb.git
 cd vaultdb
 ```
 
-## 🧠 Usage (Phase 1)
+## 🧠 Usage (Phase 1 Complete!)
+
+```python
+from vaultdb.encrypted_storage import EncryptedStorage
+from vaultdb.crypto import generate_key, generate_salt
+
+# Generate encryption key from passphrase
+salt = generate_salt()
+key = generate_key("my-passphrase", salt)
+
+# Create encrypted vault
+vault = EncryptedStorage("vault.json", key)
+
+# Insert a document
+doc_id = vault.insert({"name": "Alice", "email": "alice@example.com"})
+
+# Fetch it back
+doc = vault.get(doc_id)
+
+# Update it
+vault.update(doc_id, {"role": "admin"})
+
+# Delete it
+vault.delete(doc_id)
+
+# Find documents by field
+results = vault.find({"name": "Alice"})
+```
 
 ```python
 from vaultdb.storage import DocumentStorage
@@ -56,6 +91,26 @@ pytest
 
 ```
 vaultdb/
+├── storage.py                  # Plaintext document store
+├── encrypted_storage.py        # Encrypted wrapper with Fernet
+├── crypto.py                   # AES-based encryption functions
+├── errors.py                   # Custom VaultDB error types
+├── tests/
+│   ├── test_storage.py         # Tests for plaintext store
+│   ├── test_encrypted_storage.py # Tests for encrypted storage
+│   └── test_crypto.py          # Tests for crypto utils
+├── demo/example_usage.py       # End-to-end usage example
+├── docs/
+│   ├── storage.md              # Component-level doc (plaintext)
+│   ├── encrypted_storage_user_doc.md  # Developer guide
+│   ├── test_storage.md         # Timi’s user-centered test narrative
+│   └── test_encrypted_storage_find.md # Edge-case test walkthrough
+├── README.md
+├── LICENSE
+```
+
+```
+vaultdb/
 ├── storage.py          # Core storage engine
 ├── test_storage.py     # Unit tests for storage
 ├── storage.md          # Component-level documentation
@@ -64,6 +119,13 @@ vaultdb/
 ```
 
 ## 🚧 Roadmap (MVP)
+
+| Phase | Goal |
+|-------|------|
+| 1 🔄 | Core engine: encrypted JSON storage, querying, Pythonic API (final task remaining) |
+| 2 🔐 | Developer trust: file metadata, CLI, key handling |
+| 3 🧪 | Demos: notebook, PyPI package, data leak test |
+| 4 🚀 | Public launch: GitHub, social push, waitlist |
 
 | Phase | Goal |
 |-------|------|

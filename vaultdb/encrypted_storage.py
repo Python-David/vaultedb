@@ -1,5 +1,6 @@
 import os
 import sys
+import warnings
 from typing import Optional, List
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -19,6 +20,11 @@ class EncryptedStorage:
     """
 
     def __init__(self, path: str, key: bytes):
+        if not path.endswith(".vault"):
+            warnings.warn(
+                "It's recommended to use a `.vault` extension for encrypted VaultDB files.",
+                UserWarning
+            )
         self.key = key
         self.store = DocumentStorage(path)
 
