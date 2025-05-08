@@ -6,7 +6,7 @@ from typing import Optional, List
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from vaultdb.storage import DocumentStorage
-from vaultdb.crypto import encrypt_document, decrypt_document, CryptoError
+from vaultdb.crypto import encrypt_document, decrypt_document, CryptoError, generate_salt, generate_key
 from vaultdb.errors import InvalidDocumentError, DuplicateIDError
 import uuid
 
@@ -120,3 +120,30 @@ class EncryptedStorage:
                 results.append(doc)
 
         return results
+
+    @classmethod
+    def open(cls, path: str, passphrase: str) -> "EncryptedStorage":
+        """
+        Initializes EncryptedStorage from a passphrase.
+
+        - Loads existing vault and reads embedded salt if present.
+        - For new vaults, generates and embeds a salt.
+        - Raises CryptoError if an existing vault lacks salt.
+        """
+        if not passphrase:
+            raise ValueError("Passphrase must not be empty. VaultDB requires a non-empty passphrase for encryption.")
+
+        if not path.endswith(".vault"):
+            raise ValueError("Vault file must use the .vault extension")
+
+        if os.path.exists(path):
+            probe = DocumentStorage(path)
+            if not probe.salt:
+                raise CryptoError("Vault exists but missing 'salt' metadata; cannot derive key.")
+            salt = probe.salt
+        else:
+            salt = generate_salt()
+            DocumentStorage(path, app_name=None, salt=salt)
+
+        key = generate_key(passphrase, salt)
+        return cls(path, key)
