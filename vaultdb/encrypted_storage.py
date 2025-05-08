@@ -1,7 +1,10 @@
+import base64
+import json
 import os
 import sys
 import warnings
-from typing import Optional, List
+from enum import Enum
+from typing import Optional, List, Literal
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -9,6 +12,11 @@ from vaultdb.storage import DocumentStorage
 from vaultdb.crypto import encrypt_document, decrypt_document, CryptoError, generate_salt, generate_key
 from vaultdb.errors import InvalidDocumentError, DuplicateIDError
 import uuid
+
+
+class ExportFormat(str, Enum):
+    DICT = "dict"
+    JSON = "json"
 
 
 class EncryptedStorage:
@@ -151,3 +159,51 @@ class EncryptedStorage:
 
         except Exception as e:
             raise CryptoError(f"VaultDB failed to load this file — {e}") from e
+
+    def export_key(
+            self,
+            export_format: ExportFormat = ExportFormat.DICT,
+            filepath: Optional[str] = None
+    ) -> Optional[dict | str]:
+        """
+        Export the derived key and salt used for this vault.
+
+        Args:
+            export_format: 'dict' (default) returns a Python dict,
+                    'json' writes to a `.vaultkey` file
+            filepath: File path to write the key export if format='json'.
+                      Will auto-append `.vaultkey` if missing.
+
+        Returns:
+            dict if format='dict'; None if file is written
+
+        Raises:
+            RuntimeError if called before opening the vault
+            ValueError if format='json' and no filepath provided
+        """
+        if not hasattr(self, "store") or not hasattr(self.store, "salt"):
+            raise RuntimeError("Vault must be opened before exporting key.")
+
+        export = {
+            "key": base64.urlsafe_b64encode(self.key).decode("utf-8"),
+            "salt": base64.urlsafe_b64encode(self.store.salt).decode("utf-8"),
+            "vault_version": self.store.meta.get("vault_version", "unknown")
+        }
+
+        if export_format == ExportFormat.DICT:
+            return export
+
+        elif export_format == ExportFormat.JSON:
+            if not filepath:
+                raise ValueError("Must provide `filepath` when export_format='json'")
+
+            if not filepath.endswith(".vaultkey"):
+                filepath += ".vaultkey"
+
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(export, f, indent=2)
+            return filepath
+
+        else:
+            raise ValueError("Unsupported export_format. Use 'dict' or 'json'.")
+

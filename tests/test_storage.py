@@ -120,15 +120,15 @@ def test_atomic_write_failure_does_not_corrupt_file(temp_storage_path):
         assert data["documents"][doc_id]["name"] == "SafeDoc"
 
 def test_legacy_file_format_raises_storage_error(temp_storage_path):
-    # Write legacy format (no _meta, no documents key)
+    # Write legacy export_format (no _meta, no documents key)
     legacy_data = {
         "legacy-id": {"_id": "legacy-id", "content": "legacy"}
     }
     with open(temp_storage_path, "w") as f:
         json.dump(legacy_data, f)
 
-    # Expect a StorageError when loading invalid format
-    with pytest.raises(StorageError, match="Vault file is not in supported format"):
+    # Expect a StorageError when loading invalid export_format
+    with pytest.raises(StorageError, match="Vault file is not in supported export_format"):
         DocumentStorage(temp_storage_path)
 
 def test_meta_fields_are_protected(temp_storage_path):

@@ -76,7 +76,7 @@ def decrypt_document(token: Union[str, bytes], key: bytes) -> dict:
 
 def encrypt_with_salt(doc: Dict, passphrase: str) -> str:
     """
-    Encrypts a document with a new salt. Returns a string blob in the format:
+    Encrypts a document with a new salt. Returns a string blob in the export_format:
     base64(salt) + '.' + token
 
     This avoids issues where raw binary salt might contain delimiter characters.
@@ -93,13 +93,13 @@ def encrypt_with_salt(doc: Dict, passphrase: str) -> str:
 
 def decrypt_with_salt(blob: str, passphrase: str) -> Dict:
     """
-    Decrypts a blob in the format: base64(salt) + '.' + token
+    Decrypts a blob in the export_format: base64(salt) + '.' + token
     using the provided passphrase.
     Returns the original document as a dict.
     """
     try:
         if "." not in blob:
-            raise CryptoError("Invalid blob format: missing separator.")
+            raise CryptoError("Invalid blob export_format: missing separator.")
         salt_b64, token = blob.split(".", 1)
         salt = base64.urlsafe_b64decode(salt_b64.encode("utf-8"))
         key = generate_key(passphrase, salt)

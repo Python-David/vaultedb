@@ -15,7 +15,7 @@ class ProtectedMetaDict(dict):
 
     Protected fields:
     - 'created_at': auto-generated timestamp when the vault is first created.
-    - 'vault_version': the version of the VaultDB format.
+    - 'vault_version': the version of the VaultDB export_format.
     - 'salt': base64-encoded cryptographic salt used for key derivation.
 
     These fields are critical for the integrity and security of the vault,
@@ -39,7 +39,7 @@ class ProtectedMetaDict(dict):
 
 class DocumentStorage:
     """
-    Handles loading and saving encrypted documents to disk in JSON format.
+    Handles loading and saving encrypted documents to disk in JSON export_format.
     Used as the low-level storage engine by VaultDB. Includes metadata for versioning,
     app context, and key derivation salt.
 
@@ -106,7 +106,7 @@ class DocumentStorage:
                     else:
                         self.salt = None  # Vault created without salt? Should raise if used for passphrase
                 else:
-                    raise StorageError("Vault file is not in supported format (missing _meta or documents).")
+                    raise StorageError("Vault file is not in supported export_format (missing _meta or documents).")
 
 
         except (json.JSONDecodeError, IOError) as e:
