@@ -63,8 +63,12 @@ def test_decrypt_with_wrong_key_fails(doc, salt):
 
 def test_encrypt_with_salt_blob_is_valid_base64(doc, passphrase):
     blob = encrypt_with_salt(doc, passphrase)
-    decoded = base64.b64decode(blob.encode())
-    assert b"." in decoded
+    assert "." in blob
+    salt_b64, token = blob.split(".", 1)
+    # Check both parts are valid base64
+    base64.urlsafe_b64decode(salt_b64.encode())
+    base64.urlsafe_b64decode(token.encode())  # Fernet tokens are base64 too
+
 
 
 def test_decrypt_with_salt_restores_document(doc, passphrase):
