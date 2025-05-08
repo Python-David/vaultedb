@@ -23,21 +23,37 @@ class VaultInspectionResult:
 
 
 def print_human_output(result: VaultInspectionResult, max_ids: int, quiet: bool):
+    preview_ids = result.document_ids[:max_ids]
+
+    def label(name):
+        return name if quiet else {
+            "file": "📁 File",
+            "created_at": "📅 Created At",
+            "vault_version": "🔖 Vault Version",
+            "app_name": "🏷️ App Name",
+            "salt": "🧂 Salt",
+            "doc_count": "📄 Document Count",
+            "ids": "🆔 IDs"
+        }[name]
+
     if not quiet:
         print("VaultDB Inspector 🔍")
         print("-" * 30)
-    print(f"📁 File: {result.file}")
-    print(f"📅 Created At: {result.created_at}")
-    print(f"🔖 Vault Version: {result.vault_version}")
-    print(f"🏷️ App Name: {result.app_name}")
-    print(f"🧂 Salt: {result.salt[:20]}... (truncated)")
-    print(f"📄 Document Count: {result.document_count}")
-    if result.document_ids:
-        print(f"🆔 IDs (first {len(result.document_ids)}):")
-        for _id in result.document_ids[:max_ids]:
+
+    print(f"{label('file')}: {result.file}")
+    print(f"{label('created_at')}: {result.created_at}")
+    print(f"{label('vault_version')}: {result.vault_version}")
+    print(f"{label('app_name')}: {result.app_name or '—'}")
+    print(f"{label('salt')}: {result.salt[:20]}... (truncated)")
+    print(f"{label('doc_count')}: {result.document_count}")
+
+    if preview_ids:
+        print(f"{label('ids')} (first {len(preview_ids)}):")
+        for _id in preview_ids:
             print(f"  - {_id}")
-        if result.document_count > max_ids:
-            print(f"... and {result.document_count - max_ids} more")
+        if result.document_count > len(preview_ids):
+            print(f"... and {result.document_count - len(preview_ids)} more")
+
 
 
 def inspect_vault(path: str, max_ids: int = 10, output_json: bool = False, quiet: bool = False):
@@ -57,10 +73,10 @@ def inspect_vault(path: str, max_ids: int = 10, output_json: bool = False, quiet
             file=os.path.basename(path),
             created_at=meta.get("created_at"),
             vault_version=meta.get("vault_version"),
-            app_name=meta.get("app_name", "—"),
+            app_name=meta.get("app_name"),
             salt=meta.get("salt", "missing"),
             document_count=len(doc_ids),
-            document_ids=doc_ids[:max_ids]
+            document_ids=doc_ids
         )
 
         if output_json:

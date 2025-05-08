@@ -1,4 +1,3 @@
-
 # 🔐 VaultDB
 
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)
@@ -82,31 +81,52 @@ Each `.vault` file stores:
 }
 ```
 
+
 ---
 
-## 🔑 Key Export
+## 🔍 Inspecting Vaults
 
-VaultDB now supports exporting encryption keys and salts securely.
+VaultDB includes a small, secure CLI tool that lets you inspect the contents of a `.vault` file *without decrypting any data*.
 
-- `VaultDB.export_key()` allows you to export the derived key and salt either as a dictionary or write it to a `.vaultkey` file.
-- Use `ExportFormat.DICT` for programmatic access or `ExportFormat.JSON` to export to a file.
+This reinforces trust by making the encryption transparent — you can check what's in the vault (metadata, doc count, IDs) without ever exposing plaintext.
 
-### Example:
+### Usage
 
-```python
-# Export to dict
-export = vault.export_key()
-print(export)
-
-# Export to file
-file_path = vault.export_key(export_format=ExportFormat.JSON, filepath="mykey")
-print(f"Key exported to: {file_path}")
+```bash
+vault inspect path/to/your.vault
 ```
 
-**⚠️ WARNING**: It is your responsibility to securely store the exported key and salt. Exposing or losing the key could compromise your encrypted data. Only share with trusted parties and ensure it is handled with the highest security standards. 
+Or, if running from source:
 
-If you prefer not to manage the key manually, VaultDB can handle key management for you automatically when using `VaultDB.open()`, so you only need to securely store your passphrase.
+```bash
+python -m vaultdb.cli inspect path/to/your.vault
+```
 
+### Options
+
+| Flag             | Description                                   |
+|------------------|-----------------------------------------------|
+| `--max-ids N`    | Max number of document IDs to show (default: 10) |
+| `--json`         | Output summary as JSON (for scripting)        |
+| `--quiet`        | Suppress emojis and headers (machine-friendly) |
+
+### Example Output
+
+```bash
+VaultDB Inspector 🔍
+------------------------------
+📁 File: notes.vault
+📅 Created At: 2025-05-08T12:00:00Z
+🔖 Vault Version: 1.0.0
+🏷️ App Name: MyJournal
+🧂 Salt: 8sqceV6432hVrwGHEk1N... (truncated)
+📄 Document Count: 2
+🆔 IDs (first 2):
+  - alice
+  - bob
+```
+
+VaultDB guarantees that **no decryption is performed** — only metadata and ID fields are shown.
 ---
 
 ## 🛠 Roadmap
@@ -115,7 +135,6 @@ If you prefer not to manage the key manually, VaultDB can handle key management 
 - [x] Transparent key handling with salt
 - [x] Query and insert API
 - [x] Metadata embedding
-- [x] Key export functionality
 - [ ] CLI inspector (`vault inspect my.vault`)
 - [ ] PyPI package + loom demo
 
