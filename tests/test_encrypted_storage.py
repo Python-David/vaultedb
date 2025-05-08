@@ -136,3 +136,18 @@ def test_does_not_warn_with_vault_extension():
             )
     finally:
         os.remove(vault_path)
+
+def test_handles_large_vault_file(encrypted_store):
+    # Insert many documents
+    for i in range(1000):
+        encrypted_store.insert({"index": i, "msg": f"doc-{i}"})
+
+    # Confirm we can list them all
+    docs = encrypted_store.list()
+    assert len(docs) == 1000
+
+    # Confirm find still works on a late insert
+    result = encrypted_store.find({"index": 999})
+    assert len(result) == 1
+    assert result[0]["msg"] == "doc-999"
+

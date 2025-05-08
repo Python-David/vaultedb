@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "vaultdb"
+version = "1.0.0"
+description = "Encrypted document DB for Python developers. Like SQLite, but with built-in trust, end-to-end encryption, and a zero-config CLI."
+authors = ["Python-David <mrnwobodo@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8,!=3.9.0,!=3.9.1"
+cryptography = "^44.0.3"
+
+
+[tool.poetry.group.dev.dependencies]
+coverage = "<7.0"
+pytest-cov = "<4.0"
+pytest = "^8.3.5"
+build = "^1.2.2.post1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+vault = "vaultdb.cli:main"

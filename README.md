@@ -1,15 +1,20 @@
 # 🔐 VaultDB
 
-![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)
 
-**VaultDB** is a zero-config, encrypted document database for Python developers who want built-in security without thinking about cryptography.
+> **SQLite for encrypted documents.**  
+> All the simplicity of SQLite — but your data is always encrypted, always private.
+
+
+**VaultDB** is a zero-config, encrypted document database for Python developers who want built-in security without dealing with cryptography directly.
 
 - ⚡ Fast local JSON-backed store
-- 🔐 AES-256 encryption by default (via Fernet)
-- 🧠 Developer-friendly API
-- 🧂 Salt-based key derivation with secure passphrase handling
-- 🧰 Simple `.insert()`, `.get()`, `.find()` methods
-- 📦 Single `.vault` file with embedded metadata and encryption salt
+- 🔐 AES-256 encryption using Fernet
+- 🧠 Pythonic `.insert()`, `.get()`, `.find()` API
+- 🧂 Salt-based key derivation per vault
+- 🔍 Inspectable, portable `.vault` file format
+- 🧰 Optional CLI tool for safe metadata inspection: trust without decrypting
+- 📦 Single-file storage with embedded metadata and salt
 
 ---
 
@@ -27,42 +32,57 @@ print(doc["email"])
 
 ---
 
-## 🔐 VaultDB Guarantees Cryptographic Isolation
+## ⭐ VaultDB Design Principles
 
-VaultDB ensures that **each vault file is isolated by design** — even if the same passphrase is used across different vaults. This is achieved through random salt-based key derivation.
+### 🔐 Zero-Config Encryption
+
+VaultDB encrypts every document automatically using AES-256 (via Fernet). Developers only provide a passphrase — VaultDB handles the rest.
+
+- No need to manage keys manually
+- All data is encrypted at rest
+- Only `_id` is stored unencrypted for lookup
+
+---
+
+### 🧂 Salt-Based Key Derivation
+
+Each vault file embeds a **unique salt**, which is used with your passphrase to derive the encryption key using PBKDF2.
+
+- Even with the same passphrase, each vault produces a different key
+- Defends against rainbow table and credential reuse attacks
+- Salt is safely stored in `_meta["salt"]`
+
+---
+
+### ✅ Cryptographic Isolation Guarantee
+
+Even if two vaults are opened with the **same passphrase**, they **cannot decrypt each other's documents**.
 
 ```python
 from vaultdb import VaultDB
 from vaultdb.errors import CryptoError
 
-# Create two vaults with the same passphrase
 vault1 = VaultDB.open("vault1.vault", "hunter2")
 vault2 = VaultDB.open("vault2.vault", "hunter2")
 
-# Insert a document into vault1
 vault1.insert({"_id": "secret", "msg": "top secret"})
 
-# Manually move the encrypted blob from vault1 into vault2 (for testing)
+# Manually copy raw encrypted doc into vault2
 vault2.store.insert(vault1.store.data["secret"])
 
-# Trying to decrypt it with the wrong vault (vault2) fails:
 try:
     vault2.get("secret")
 except CryptoError:
-    print("Decryption failed — keys are isolated.")
+    print("Decryption failed — vaults are isolated.")
 ```
 
-This proves:
-
-- ✅ Vaults using the same passphrase **still derive different keys**
-- ✅ Vaults **cannot decrypt each other's data**
-- ✅ VaultDB is **zero-trust and secure by default**
+✅ Proves cryptographic boundaries are enforced even with identical passphrases.
 
 ---
 
-## 📁 File Format
+### 📁 File Format: Inspectable and Portable
 
-Each `.vault` file stores:
+Each `.vault` file is a valid JSON document containing:
 
 ```json
 {
@@ -75,58 +95,125 @@ Each `.vault` file stores:
   "documents": {
     "abc123": {
       "_id": "abc123",
-      "data": "gAAAAABh..."  // Fernet-encrypted blob
+      "data": "gAAAAABh..."  // Encrypted blob
     }
   }
 }
 ```
 
+- JSON-readable
+- Safe to commit or sync
+- Portable across systems
 
 ---
 
-## 🔍 Inspecting Vaults
+## 🔍 CLI Inspector: Trust Without Decryption
 
-VaultDB includes a small, secure CLI tool that lets you inspect the contents of a `.vault` file *without decrypting any data*.
-
-This reinforces trust by making the encryption transparent — you can check what's in the vault (metadata, doc count, IDs) without ever exposing plaintext.
-
-### Usage
+Use the built-in CLI to inspect metadata and document IDs — **without decrypting any content**.
 
 ```bash
-vault inspect path/to/your.vault
+vault inspect notes.vault
 ```
 
-Or, if running from source:
+Or:
 
 ```bash
-python -m vaultdb.cli inspect path/to/your.vault
+python -m vaultdb.cli inspect notes.vault
 ```
 
-### Options
+### Output Example
 
-| Flag             | Description                                   |
-|------------------|-----------------------------------------------|
-| `--max-ids N`    | Max number of document IDs to show (default: 10) |
-| `--json`         | Output summary as JSON (for scripting)        |
-| `--quiet`        | Suppress emojis and headers (machine-friendly) |
-
-### Example Output
-
-```bash
+```
 VaultDB Inspector 🔍
 ------------------------------
 📁 File: notes.vault
 📅 Created At: 2025-05-08T12:00:00Z
 🔖 Vault Version: 1.0.0
 🏷️ App Name: MyJournal
-🧂 Salt: 8sqceV6432hVrwGHEk1N... (truncated)
+🧂 Salt: wvN2t4c89Ne8... (truncated)
 📄 Document Count: 2
 🆔 IDs (first 2):
   - alice
   - bob
 ```
 
-VaultDB guarantees that **no decryption is performed** — only metadata and ID fields are shown.
+### CLI Options
+
+| Flag           | Description                                      |
+|----------------|--------------------------------------------------|
+| `--json`       | Output metadata as JSON                          |
+| `--quiet`      | Suppress headers and emojis                      |
+| `--max-ids N`  | Show N IDs instead of default 10                 |
+
+---
+
+## ⚡ Performance and Scalability Notes
+
+VaultDB loads the entire vault into memory and writes atomically. This favors **simplicity and safety**.
+
+### Practical Limits
+
+| Factor              | Safe Range            | Notes                              |
+|---------------------|-----------------------|-------------------------------------|
+| Document count      | Up to ~10,000–25,000  | Full scans, no indexing             |
+| Vault file size     | Up to ~100MB          | Depends on doc size                |
+| Query performance   | Linear (`.find()`)    | Fast for small–medium vaults       |
+| Storage format      | Flat JSON             | Reliable and portable              |
+
+VaultDB is not meant to replace traditional databases — it’s built for privacy-first applications, AI agents, regulated industries, and sensitive local workflows where data ownership and encryption must come first.
+
+It shines in use cases like:
+
+📝 Encrypted journaling and local note-taking
+
+🤖 AI agents that store sensitive context or user profiles on-device
+
+🩺 Health and therapy apps needing offline, encrypted session data
+
+📦 Configuration snapshots that shouldn’t ever hit the cloud
+
+🔐 Secure local logging for audit trails or confidential workflows
+
+VaultDB is ideal when:
+
+1. You want to ensure data at rest is always encrypted
+
+2. You need verifiability and trust, not complexity
+
+3. You want to keep control without building custom crypto
+
+Built for builders who take privacy seriously — even when no one's watching.
+
+---
+
+## 🧪 Full Test Coverage
+
+- 94%+ test coverage via `pytest` + `coverage`
+- Unit tests cover: storage, encryption, passphrase handling, CLI, key export
+- CLI tested via subprocess with real `.vault` files
+
+---
+
+## 📦 Installation
+
+Install with Poetry:
+
+```bash
+poetry install
+```
+
+Install from PyPI (when published):
+
+```bash
+pip install vaultdb
+```
+
+Run the CLI:
+
+```bash
+vault inspect your.vault
+```
+
 ---
 
 ## 🛠 Roadmap
@@ -134,9 +221,10 @@ VaultDB guarantees that **no decryption is performed** — only metadata and ID 
 - [x] Encrypted storage with passphrase
 - [x] Transparent key handling with salt
 - [x] Query and insert API
-- [x] Metadata embedding
-- [ ] CLI inspector (`vault inspect my.vault`)
-- [ ] PyPI package + loom demo
+- [x] CLI inspector tool
+- [x] PyPI-ready packaging
+- [ ] Exportable vault migration utility
+- [ ] Indexing or streaming modes (future optional)
 
 ---
 
