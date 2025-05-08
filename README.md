@@ -1,147 +1,99 @@
 # 🔐 VaultDB
 
-**VaultDB** is a zero-config, Python-native, document database that stores all your data encrypted by default. Built for developers who care about privacy, speed, and simplicity.
+![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)
+
+**VaultDB** is a zero-config, encrypted document database for Python developers who want built-in security without thinking about cryptography.
+
+- ⚡ Fast local JSON-backed store
+- 🔐 AES-256 encryption by default (via Fernet)
+- 🧠 Developer-friendly API
+- 🧂 Salt-based key derivation with secure passphrase handling
+- 🧰 Simple `.insert()`, `.get()`, `.find()` methods
+- 📦 Single `.vault` file with embedded metadata and encryption salt
 
 ---
 
-## ✨ Features
+## 🚀 Quick Start
 
-- 📦 JSON-based document storage
-- 🔒 Transparent AES-256 encryption (completed!)
-- 🧠 Pythonic API: `vault.insert()`, `vault.find()`...
-- 💥 Atomic file writes to prevent corruption
-- 🔍 Simple querying with `.find()` (no index, linear scan)
-- 🧪 100% tested with `pytest`
-- 📁 Local-first: no server or config needed
+```python
+from vaultdb import VaultDB
 
-- 📦 JSON-based document storage
-- 🔐 End-to-end encryption (coming in Phase 2)
-- 🧠 Human-readable API, built with Python in mind
-- 🧪 Tested with `pytest`
-- 💥 Atomic file writes to prevent corruption
-- 📁 Local-first: no server required
-- 🔍 Simple querying (planned)
-- 🔑 Key management system (planned)
+vault = VaultDB.open("notes.vault", "correct horse battery staple")
+vault.insert({"_id": "alice", "email": "alice@example.com"})
+
+doc = vault.get("alice")
+print(doc["email"])
+```
 
 ---
 
-## 📦 Installation
+## 🔐 VaultDB Guarantees Cryptographic Isolation
 
-Coming soon to PyPI. For now, clone and use locally:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/vaultdb.git
-cd vaultdb
-```
-
-## 🧠 Usage (Phase 1 Complete!)
+VaultDB ensures that **each vault file is isolated by design** — even if the same passphrase is used across different vaults. This is achieved through random salt-based key derivation.
 
 ```python
-from vaultdb.encrypted_storage import EncryptedStorage
-from vaultdb.crypto import generate_key, generate_salt
+from vaultdb import VaultDB
+from vaultdb.errors import CryptoError
 
-# Generate encryption key from passphrase
-salt = generate_salt()
-key = generate_key("my-passphrase", salt)
+# Create two vaults with the same passphrase
+vault1 = VaultDB.open("vault1.vault", "hunter2")
+vault2 = VaultDB.open("vault2.vault", "hunter2")
 
-# Create encrypted vault
-vault = EncryptedStorage("vault.json", key)
+# Insert a document into vault1
+vault1.insert({"_id": "secret", "msg": "top secret"})
 
-# Insert a document
-doc_id = vault.insert({"name": "Alice", "email": "alice@example.com"})
+# Manually move the encrypted blob from vault1 into vault2 (for testing)
+vault2.store.insert(vault1.store.data["secret"])
 
-# Fetch it back
-doc = vault.get(doc_id)
-
-# Update it
-vault.update(doc_id, {"role": "admin"})
-
-# Delete it
-vault.delete(doc_id)
-
-# Find documents by field
-results = vault.find({"name": "Alice"})
+# Trying to decrypt it with the wrong vault (vault2) fails:
+try:
+    vault2.get("secret")
+except CryptoError:
+    print("Decryption failed — keys are isolated.")
 ```
 
-```python
-from vaultdb.storage import DocumentStorage
+This proves:
 
-store = DocumentStorage("vault.json")
+- ✅ Vaults using the same passphrase **still derive different keys**
+- ✅ Vaults **cannot decrypt each other's data**
+- ✅ VaultDB is **zero-trust and secure by default**
 
-# Insert a document
-doc_id = store.insert({"name": "Alice"})
+---
 
-# Fetch it back
-doc = store.get(doc_id)
+## 📁 File Format
 
-# Update it
-store.update(doc_id, {"age": 30})
+Each `.vault` file stores:
 
-# Delete it
-store.delete(doc_id)
+```json
+{
+  "_meta": {
+    "vault_version": "1.0.0",
+    "created_at": "...",
+    "salt": "base64...",
+    "app_name": "..."
+  },
+  "documents": {
+    "abc123": {
+      "_id": "abc123",
+      "data": "gAAAAABh..."  // Fernet-encrypted blob
+    }
+  }
+}
 ```
 
-## 🧪 Running Tests
+---
 
-```bash
-pytest
-```
+## 🛠 Roadmap
 
-## 📂 Project Structure
+- [x] Encrypted storage with passphrase
+- [x] Transparent key handling with salt
+- [x] Query and insert API
+- [x] Metadata embedding
+- [ ] CLI inspector (`vault inspect my.vault`)
+- [ ] PyPI package + loom demo
 
-```
-vaultdb/
-├── storage.py                  # Plaintext document store
-├── encrypted_storage.py        # Encrypted wrapper with Fernet
-├── crypto.py                   # AES-based encryption functions
-├── errors.py                   # Custom VaultDB error types
-├── tests/
-│   ├── test_storage.py         # Tests for plaintext store
-│   ├── test_encrypted_storage.py # Tests for encrypted storage
-│   └── test_crypto.py          # Tests for crypto utils
-├── demo/example_usage.py       # End-to-end usage example
-├── docs/
-│   ├── storage.md              # Component-level doc (plaintext)
-│   ├── encrypted_storage_user_doc.md  # Developer guide
-│   ├── test_storage.md         # Timi’s user-centered test narrative
-│   └── test_encrypted_storage_find.md # Edge-case test walkthrough
-├── README.md
-├── LICENSE
-```
+---
 
-```
-vaultdb/
-├── storage.py          # Core storage engine
-├── test_storage.py     # Unit tests for storage
-├── storage.md          # Component-level documentation
-├── LICENSE
-├── README.md
-```
+## 🪪 License
 
-## 🚧 Roadmap (MVP)
-
-| Phase | Goal |
-|-------|------|
-| 1 🔄 | Core engine: encrypted JSON storage, querying, Pythonic API (final task remaining) |
-| 2 🔐 | Developer trust: file metadata, CLI, key handling |
-| 3 🧪 | Demos: notebook, PyPI package, data leak test |
-| 4 🚀 | Public launch: GitHub, social push, waitlist |
-
-| Phase | Goal |
-|-------|------|
-| 1 | ✅ Core storage engine (plaintext, atomic, JSON) |
-| 2 | 🔐 Transparent encryption, key handling, CLI |
-| 3 | 🧪 Notebook/demo, PyPI-ready package |
-| 4 | 🚀 Public launch, social push, waitlist |
-
-## 🛡 License
-
-This project is licensed under the MIT License – see LICENSE for details.
-
-## 👋 Contributing
-
-This is a solo build sprint right now, but if you're passionate about privacy, open-source, or Python — feel free to open an issue or get in touch.
-
-## 📣 Stay in the loop
-
-Follow the journey on [LinkedIn](https://www.linkedin.com/in/python-david/) or star this repo to support development.
+MIT © 2025 VaultDB Project

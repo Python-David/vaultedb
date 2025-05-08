@@ -136,14 +136,18 @@ class EncryptedStorage:
         if not path.endswith(".vault"):
             raise ValueError("Vault file must use the .vault extension")
 
-        if os.path.exists(path):
-            probe = DocumentStorage(path)
-            if not probe.salt:
-                raise CryptoError("Vault exists but missing 'salt' metadata; cannot derive key.")
-            salt = probe.salt
-        else:
-            salt = generate_salt()
-            DocumentStorage(path, app_name=None, salt=salt)
+        try:
+            if os.path.exists(path):
+                probe = DocumentStorage(path)
+                if not probe.salt:
+                    raise CryptoError("Vault exists but missing 'salt' metadata; cannot derive key.")
+                salt = probe.salt
+            else:
+                salt = generate_salt()
+                DocumentStorage(path, app_name=None, salt=salt)
 
-        key = generate_key(passphrase, salt)
-        return cls(path, key)
+            key = generate_key(passphrase, salt)
+            return cls(path, key)
+
+        except Exception as e:
+            raise CryptoError(f"VaultDB failed to load this file — {e}") from e
