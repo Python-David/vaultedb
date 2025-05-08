@@ -1,3 +1,4 @@
+
 # 🔐 VaultDB
 
 ![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)
@@ -83,12 +84,38 @@ Each `.vault` file stores:
 
 ---
 
+## 🔑 Key Export
+
+VaultDB now supports exporting encryption keys and salts securely.
+
+- `VaultDB.export_key()` allows you to export the derived key and salt either as a dictionary or write it to a `.vaultkey` file.
+- Use `ExportFormat.DICT` for programmatic access or `ExportFormat.JSON` to export to a file.
+
+### Example:
+
+```python
+# Export to dict
+export = vault.export_key()
+print(export)
+
+# Export to file
+file_path = vault.export_key(export_format=ExportFormat.JSON, filepath="mykey")
+print(f"Key exported to: {file_path}")
+```
+
+**⚠️ WARNING**: It is your responsibility to securely store the exported key and salt. Exposing or losing the key could compromise your encrypted data. Only share with trusted parties and ensure it is handled with the highest security standards. 
+
+If you prefer not to manage the key manually, VaultDB can handle key management for you automatically when using `VaultDB.open()`, so you only need to securely store your passphrase.
+
+---
+
 ## 🛠 Roadmap
 
 - [x] Encrypted storage with passphrase
 - [x] Transparent key handling with salt
 - [x] Query and insert API
 - [x] Metadata embedding
+- [x] Key export functionality
 - [ ] CLI inspector (`vault inspect my.vault`)
 - [ ] PyPI package + loom demo
 
