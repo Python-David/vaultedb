@@ -175,4 +175,4 @@ Built for developers who take privacy seriously.
 ---
 
 ## 🚩 License
-MIT © 2025 vaultedb Project
+MIT © 2025 VaulteDB Project
