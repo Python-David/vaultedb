@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from vaultdb.storage import DocumentStorage
 from vaultdb.crypto import encrypt_document, decrypt_document, CryptoError, generate_salt, generate_key
 from vaultdb.errors import InvalidDocumentError, DuplicateIDError
+from vaultdb.logging import VaultAuditLog
 import uuid
 
 
@@ -27,7 +28,7 @@ class EncryptedStorage:
     The _id field is stored in plaintext to enable efficient lookup.
     """
 
-    def __init__(self, path: str, key: bytes):
+    def __init__(self, path: str, key: bytes, audit_log: Optional[VaultAuditLog] = None):
         if not path.endswith(".vault"):
             warnings.warn(
                 "It's recommended to use a `.vault` extension for encrypted VaultDB files.",
@@ -35,6 +36,7 @@ class EncryptedStorage:
             )
         self.key = key
         self.store = DocumentStorage(path)
+        self.audit_log = audit_log
 
     def insert(self, doc: dict) -> str:
         if not isinstance(doc, dict):
@@ -43,7 +45,13 @@ class EncryptedStorage:
         doc["_id"] = _id  # ensure internal _id matches external
         try:
             encrypted = encrypt_document(doc, self.key)
-            return self.store.insert({"_id": _id, "data": encrypted})
+            result = self.store.insert({"_id": _id, "data": encrypted})
+            if self.audit_log:
+                try:
+                    self.audit_log.log("insert", _id)
+                except Exception:
+                    pass
+            return result
         except DuplicateIDError:
             raise
         except Exception as e:
@@ -56,7 +64,13 @@ class EncryptedStorage:
         if "data" not in raw:
             raise CryptoError("Missing encrypted data field.")
         try:
-            return decrypt_document(raw["data"], self.key)
+            doc = decrypt_document(raw["data"], self.key)
+            if self.audit_log:
+                try:
+                    self.audit_log.log("get", doc_id)
+                except Exception:
+                    pass
+            return doc
         except Exception as e:
             raise CryptoError(f"Decryption failed on get: {e}")
 
@@ -69,12 +83,26 @@ class EncryptedStorage:
         existing.update(updates)
         try:
             encrypted = encrypt_document(existing, self.key)
-            return self.store.update(doc_id, {"data": encrypted})
+            result = self.store.update(doc_id, {"data": encrypted})
+            if result and self.audit_log:
+                try:
+                    self.audit_log.log("update", doc_id, updates)
+                except Exception:
+                    pass
+            return result
         except Exception as e:
             raise CryptoError(f"Update failed: {e}")
 
     def delete(self, doc_id: str) -> bool:
-        return self.store.delete(doc_id)
+        result = self.store.delete(doc_id)
+        if result:
+            if self.audit_log:
+                try:
+                    self.audit_log.log("delete", doc_id)
+                except Exception:
+                    pass
+            return True
+        return False
 
     def list(self, strict: bool = True) -> List[dict]:
         """
@@ -130,7 +158,7 @@ class EncryptedStorage:
         return results
 
     @classmethod
-    def open(cls, path: str, passphrase: str) -> "EncryptedStorage":
+    def open(cls, path: str, passphrase: str, enable_logging: bool = False) -> "EncryptedStorage":
         """
         Initializes EncryptedStorage from a passphrase.
 
@@ -155,10 +183,19 @@ class EncryptedStorage:
                 DocumentStorage(path, app_name=None, salt=salt)
 
             key = generate_key(passphrase, salt)
-            return cls(path, key)
+            audit_log = None
+            if enable_logging:
+                log_path = path.replace(".vault", ".vaultlog")
+                audit_log = VaultAuditLog(log_path, key)
+            return cls(path, key, audit_log=audit_log)
 
         except Exception as e:
             raise CryptoError(f"VaultDB failed to load this file — {e}") from e
+
+    def get_audit_log(self) -> VaultAuditLog:
+        if not self.audit_log:
+            raise RuntimeError("Audit logging was not enabled for this vault.")
+        return self.audit_log
 
     def export_key(
             self,
@@ -206,4 +243,3 @@ class EncryptedStorage:
 
         else:
             raise ValueError("Unsupported export_format. Use 'dict' or 'json'.")
-
