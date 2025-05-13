@@ -10,8 +10,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb.storage import DocumentStorage
-from vaultdb.errors import InvalidDocumentError, DuplicateIDError, StorageError
+from vaultedb.storage import DocumentStorage
+from vaultedb.errors import InvalidDocumentError, DuplicateIDError, StorageError
 
 
 @pytest.fixture
@@ -110,7 +110,7 @@ def test_atomic_write_failure_does_not_corrupt_file(temp_storage_path):
     original_doc = {"name": "SafeDoc"}
     doc_id = store.insert(original_doc)
 
-    with patch("vaultdb.storage.os.replace", side_effect=Exception("Simulated crash")):
+    with patch("vaultedb.storage.os.replace", side_effect=Exception("Simulated crash")):
         with pytest.raises(StorageError):
             store.insert({"name": "CrashDoc"})
 

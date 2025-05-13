@@ -1,11 +1,11 @@
-# 🔐 VaultDB
+# 🔐 VaulteDB
 
 ![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)
 
 > **SQLite for encrypted documents.**  
 > All the simplicity of SQLite — but your data is always encrypted, always private.
 
-**VaultDB** is a zero-config, encrypted document database for Python developers who want built-in security without dealing with cryptography directly.
+**VaulteDB** is a zero-config, encrypted document database for Python developers who want built-in security without dealing with cryptography directly.
 
 - ⚡ Fast local JSON-backed store
 - 🔐 AES-256 encryption using Fernet
@@ -21,9 +21,9 @@
 ## 🚀 Quick Start
 
 ```python
-from vaultdb import VaultDB
+from vaultedb import vaultedb
 
-vault = VaultDB.open("notes.vault", "correct horse battery staple")
+vault = vaultedb.open("notes.vault", "correct horse battery staple")
 vault.insert({"_id": "alice", "email": "alice@example.com"})
 
 print(vault.get("alice")['email'])
@@ -31,19 +31,19 @@ print(vault.get("alice")['email'])
 
 ---
 
-## ✨ Why VaultDB?
+## ✨ Why VaulteDB?
 
 - ❌ SQLCipher: low-level SQL only
 - 🔐 MongoDB: enterprise-only FLE, complex setup
 - ⚡ Evervault: hosted service, not a library
-- 🚀 VaultDB: open-source, local, encrypted, and simple
+- 🚀 vaultedb: open-source, local, encrypted, and simple
 
 ---
 
 ## ⭐ Design Principles
 
 ### 🔐 Zero-Config Encryption
-VaultDB encrypts every document automatically. Developers only provide a passphrase. VaultDB handles:
+VaulteDB encrypts every document automatically. Developers only provide a passphrase. vaultedb handles:
 - Key derivation (PBKDF2)
 - AES-256 encryption (via Fernet)
 - Embedded salts
@@ -59,13 +59,13 @@ Each vault embeds a **unique salt**. Even with the same passphrase, every vault 
 Same passphrase ≠ same key. Copying blobs across vaults doesn't work:
 
 ```python
-vault1 = VaultDB.open("vault1.vault", "hunter2")
-vault2 = VaultDB.open("vault2.vault", "hunter2")
+vault1 = vaultedb.open("vault1.vault", "hunter2")
+vault2 = vaultedb.open("vault2.vault", "hunter2")
 
 vault1.insert({"_id": "secret", "msg": "top secret"})
 vault2.store.insert(vault1.store.data["secret"])
 
-from vaultdb.errors import CryptoError
+from vaultedb.errors import CryptoError
 try:
     vault2.get("secret")
 except CryptoError:
@@ -95,7 +95,7 @@ Each `.vault` file is valid JSON:
 vault inspect notes.vault
 ```
 ```bash
-python -m vaultdb.cli inspect notes.vault --json --quiet
+python -m vaultedb.cli inspect notes.vault --json --quiet
 ```
 See vault metadata, salt, and IDs without ever decrypting.
 
@@ -104,7 +104,7 @@ See vault metadata, salt, and IDs without ever decrypting.
 ## 🗓️ Logging: Encrypted Audit Trails (Optional)
 Enable audit logging:
 ```python
-vault = VaultDB.open("secure.vault", "hunter2", enable_logging=True)
+vault = vaultedb.open("secure.vault", "hunter2", enable_logging=True)
 vault.insert({"_id": "day1", "note": "Encrypted entry"})
 ```
 
@@ -154,7 +154,7 @@ Planned post-MVP:
 
 ## 📦 Installation
 ```bash
-pip install vaultdb  # or use poetry install if cloning locally
+pip install vaultedb  # or use poetry install if cloning locally
 ```
 
 ---
@@ -165,8 +165,8 @@ pip install vaultdb  # or use poetry install if cloning locally
 
 ---
 
-## 🌟 Support VaultDB
-- ⭐ Star us on GitHub: [VaultDB](https://github.com/yourusername/vaultdb)
+## 🌟 Support vaultedb
+- ⭐ Star us on GitHub: [vaultedb](https://github.com/yourusername/vaultedb)
 - 📢 Share your feedback
 - 📱 Try the demo or install from PyPI
 
@@ -175,4 +175,4 @@ Built for developers who take privacy seriously.
 ---
 
 ## 🚩 License
-MIT © 2025 VaultDB Project
+MIT © 2025 vaultedb Project

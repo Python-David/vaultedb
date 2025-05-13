@@ -1,15 +1,15 @@
 [tool.poetry]
-name = "vaultdb-mvp"
+name = "vaultedb"
 version = "1.0.0"
 description = "Encrypted document DB for Python developers. Like SQLite, but with built-in trust, end-to-end encryption, and a zero-config CLI."
 authors = ["Python-David <mrnwobodo@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/Python-David/vaultdb"
-repository = "https://github.com/Python-David/vaultdb"
-keywords = ["encryption", "database", "secure", "document store", "vaultdb"]
+homepage = "https://github.com/Python-David/vaultedb"
+repository = "https://github.com/Python-David/vaultedb"
+keywords = ["encryption", "database", "secure", "document store", "vaultedb"]
 packages = [
-  { include = "vaultdb" }
+  { include = "vaultedb" }
 ]
 
 classifiers = [
@@ -41,4 +41,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-vault = "vaultdb.cli:main"
+vault = "vaultedb.cli:main"

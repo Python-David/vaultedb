@@ -8,9 +8,9 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb.encrypted_storage import EncryptedStorage
-from vaultdb.crypto import generate_key, generate_salt, CryptoError
-from vaultdb.errors import InvalidDocumentError, DuplicateIDError
+from vaultedb.encrypted_storage import EncryptedStorage
+from vaultedb.crypto import generate_key, generate_salt, CryptoError
+from vaultedb.errors import InvalidDocumentError, DuplicateIDError
 
 @pytest.fixture
 def encrypted_store():

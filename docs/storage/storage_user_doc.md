@@ -1,14 +1,14 @@
-# VaultDB `storage.py`: User-Centered Documentation
+# vaultedb `storage.py`: User-Centered Documentation
 
 ## Overview
 
-`storage.py` is the foundation of VaultDB's local document storage engine. It provides a lightweight, developer-friendly way to store, retrieve, and manage JSON documents on disk. This module ensures each document has a unique `_id`, supports atomic file writes to prevent corruption, and lays the groundwork for later encrypted storage layers.
+`storage.py` is the foundation of vaultedb's local document storage engine. It provides a lightweight, developer-friendly way to store, retrieve, and manage JSON documents on disk. This module ensures each document has a unique `_id`, supports atomic file writes to prevent corruption, and lays the groundwork for later encrypted storage layers.
 
 This documentation walks through the module from the perspective of a real user: **Timi**, a developer building a journaling app who wants a private, zero-setup, local database.
 
 ## User Story: Meet Timi
 
-Timi is building a local journaling app. She wants to save daily entries safely on disk without setting up PostgreSQL or MongoDB. She chooses VaultDB for its simplicity, atomic safety, and built-in encryption.
+Timi is building a local journaling app. She wants to save daily entries safely on disk without setting up PostgreSQL or MongoDB. She chooses vaultedb for its simplicity, atomic safety, and built-in encryption.
 
 ## Step-by-Step: How `storage.py` Helps Timi
 
@@ -18,11 +18,11 @@ Timi is building a local journaling app. She wants to save daily entries safely 
 store = DocumentStorage("journal.json")
 ```
 
-* VaultDB creates or loads the file `journal.json`.
-* If it doesn't exist yet, VaultDB starts fresh with an empty store.
-* If it exists, VaultDB loads its content into memory.
+* vaultedb creates or loads the file `journal.json`.
+* If it doesn't exist yet, vaultedb starts fresh with an empty store.
+* If it exists, vaultedb loads its content into memory.
 
-**Safety:** If the file is empty or corrupted, VaultDB fails gracefully with a helpful error.
+**Safety:** If the file is empty or corrupted, vaultedb fails gracefully with a helpful error.
 
 ### 2. Inserting Documents
 
@@ -30,9 +30,9 @@ store = DocumentStorage("journal.json")
 store.insert({"title": "My First Day", "mood": "🌞"})
 ```
 
-* VaultDB checks that the document is a Python dictionary.
+* vaultedb checks that the document is a Python dictionary.
 * It assigns a UUID `_id` if one isn't provided.
-* If the `_id` already exists, VaultDB raises a `DuplicateIDError`.
+* If the `_id` already exists, vaultedb raises a `DuplicateIDError`.
 * It writes the entire updated store to disk **atomically** (via a temp file and `os.replace`).
 
 **Why This Matters:** Timi doesn't have to worry about ID generation, data corruption, or managing database setup.
@@ -53,7 +53,7 @@ store.get("a1b2c3d4")
 store.update("a1b2c3d4", {"tags": ["gratitude"]})
 ```
 
-* VaultDB merges the update dict with the existing document.
+* vaultedb merges the update dict with the existing document.
 * Writes the change atomically to disk.
 * Returns `True` if successful, `False` if `_id` doesn't exist.
 
@@ -107,8 +107,8 @@ store.list()
 
 ## Summary
 
-VaultDB's `storage.py` makes it effortless for developers like Timi to build apps with local persistence, safely and intuitively.
+vaultedb's `storage.py` makes it effortless for developers like Timi to build apps with local persistence, safely and intuitively.
 
 It provides everything you'd expect from a tiny database — inserts, updates, deletes, atomic safety — but keeps things minimal and familiar.
 
-This is the foundation for all encryption, querying, and developer experience that VaultDB builds on.
+This is the foundation for all encryption, querying, and developer experience that vaultedb builds on.

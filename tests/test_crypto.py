@@ -1,6 +1,6 @@
 import base64
 import pytest
-from vaultdb.crypto import (
+from vaultedb.crypto import (
     generate_key,
     generate_salt,
     encrypt_document,
@@ -8,12 +8,12 @@ from vaultdb.crypto import (
     encrypt_with_salt,
     decrypt_with_salt,
 )
-from vaultdb.errors import CryptoError
+from vaultedb.errors import CryptoError
 
 
 @pytest.fixture
 def passphrase():
-    return "vaultdb-mvp-passphrase"
+    return "vaultedb-mvp-passphrase"
 
 
 @pytest.fixture

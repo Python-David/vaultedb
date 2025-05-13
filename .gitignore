@@ -45,9 +45,9 @@ dist/
 *.sqlite
 test*.json
 
-# VaultDB local files
+# vaultedb local files
 *.vault
-vaultdb.json
+vaultedb.json
 .coverage
 
 .env

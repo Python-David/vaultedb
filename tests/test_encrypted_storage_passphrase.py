@@ -6,15 +6,15 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb import VaultDB
-from vaultdb.errors import CryptoError
-from vaultdb.storage import DocumentStorage
+from vaultedb import vaultedb
+from vaultedb.errors import CryptoError
+from vaultedb.storage import DocumentStorage
 
 @pytest.fixture
 def temp_vault_path():
     with tempfile.NamedTemporaryFile(suffix=".vault", delete=True) as tf:
         path = tf.name
-    # Remove the file so VaultDB thinks it's a fresh start
+    # Remove the file so vaultedb thinks it's a fresh start
     if os.path.exists(path):
         os.remove(path)
     yield path
@@ -22,17 +22,17 @@ def temp_vault_path():
 # === Core Functionality ===
 
 def test_open_creates_salt_and_meta(temp_vault_path):
-    vault = VaultDB.open(temp_vault_path, "securepass")
+    vault = vaultedb.open(temp_vault_path, "securepass")
     store = DocumentStorage(temp_vault_path)
     assert "salt" in store.meta
     assert store.salt is not None
 
 
 def test_open_reopens_existing_vault_and_decrypts(temp_vault_path):
-    vault1 = VaultDB.open(temp_vault_path, "reopen-test")
+    vault1 = vaultedb.open(temp_vault_path, "reopen-test")
     vault1.insert({"_id": "test-doc", "msg": "hello"})
 
-    vault2 = VaultDB.open(temp_vault_path, "reopen-test")
+    vault2 = vaultedb.open(temp_vault_path, "reopen-test")
     doc = vault2.get("test-doc")
     assert doc["msg"] == "hello"
 
@@ -42,46 +42,46 @@ def test_open_reopens_existing_vault_and_decrypts(temp_vault_path):
 def test_open_raises_on_missing_salt(temp_vault_path):
     with open(temp_vault_path, "w", encoding="utf-8") as f:
         f.write('{"_meta": {"vault_version": "1.0.0", "created_at": "now"}, "documents": {}}')
-    with pytest.raises(CryptoError, match="VaultDB failed to load this file"):
-        VaultDB.open(temp_vault_path, "oops")
+    with pytest.raises(CryptoError, match="vaultedb failed to load this file"):
+        vaultedb.open(temp_vault_path, "oops")
 
 
 def test_open_raises_on_invalid_extension():
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
         path = tf.name
     with pytest.raises(ValueError, match="must use the .vault extension"):
-        VaultDB.open(path, "nope")
+        vaultedb.open(path, "nope")
     os.remove(path)
 
 
 def test_open_fails_on_invalid_json(temp_vault_path):
     with open(temp_vault_path, "w", encoding="utf-8") as f:
         f.write("this is not json")
-    with pytest.raises(CryptoError, match="VaultDB failed to load this file"):
-        VaultDB.open(temp_vault_path, "invalid-json")
+    with pytest.raises(CryptoError, match="vaultedb failed to load this file"):
+        vaultedb.open(temp_vault_path, "invalid-json")
 
 
 def test_open_fails_on_empty_file(temp_vault_path):
     open(temp_vault_path, "w").close()
-    with pytest.raises(CryptoError, match="VaultDB failed to load this file"):
-        VaultDB.open(temp_vault_path, "emptyfile")
+    with pytest.raises(CryptoError, match="vaultedb failed to load this file"):
+        vaultedb.open(temp_vault_path, "emptyfile")
 
 
 def test_open_rejects_empty_passphrase(temp_vault_path):
     with pytest.raises(ValueError, match="Passphrase must not be empty"):
-        VaultDB.open(temp_vault_path, "")
+        vaultedb.open(temp_vault_path, "")
 
 
 def test_open_raises_on_invalid_base64_salt(temp_vault_path):
-    vault = VaultDB.open(temp_vault_path, "ok")
+    vault = vaultedb.open(temp_vault_path, "ok")
     with open(temp_vault_path, "r+", encoding="utf-8") as f:
         data = json.load(f)
         data["_meta"]["salt"] = "!!!notbase64"
         f.seek(0)
         json.dump(data, f)
         f.truncate()
-    with pytest.raises(CryptoError, match="VaultDB failed to load this file"):
-        VaultDB.open(temp_vault_path, "ok")
+    with pytest.raises(CryptoError, match="vaultedb failed to load this file"):
+        vaultedb.open(temp_vault_path, "ok")
 
 
 # === Security Guarantees ===
@@ -94,8 +94,8 @@ def test_cross_vault_decryption_fails_with_same_passphrase():
     for p in (p1, p2):
         if os.path.exists(p): os.remove(p)
 
-    vault1 = VaultDB.open(p1, "pw")
-    vault2 = VaultDB.open(p2, "pw")
+    vault1 = vaultedb.open(p1, "pw")
+    vault2 = vaultedb.open(p2, "pw")
 
     vault1.insert({"_id": "shared-id", "msg": "vault1"})
 

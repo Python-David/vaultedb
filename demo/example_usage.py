@@ -1,15 +1,15 @@
 """
-🔐 VaultDB: Example Usage & Feature Walkthrough
+🔐 vaultedb: Example Usage & Feature Walkthrough
 
-This script walks you through the core features of VaultDB — an encrypted, file-based document store
+This script walks you through the core features of vaultedb — an encrypted, file-based document store
 that protects your data with zero config and strong defaults.
 
-Think of VaultDB as "SQLite for secrets" — everything is private, secure, and portable by default.
+Think of vaultedb as "SQLite for secrets" — everything is private, secure, and portable by default.
 """
 
 import os
-from vaultdb import VaultDB
-from vaultdb.errors import CryptoError
+from vaultedb import vaultedb
+from vaultedb.errors import CryptoError
 from pprint import pprint
 from pathlib import Path
 
@@ -21,12 +21,12 @@ for base in ["example", "vault1", "vault2", "example-logged"]:
             os.remove(f)
 
 
-print("\n=== 🚀 Welcome to VaultDB ===")
-print("VaultDB is a local, encrypted database for storing sensitive documents (like JSON objects).")
+print("\n=== 🚀 Welcome to vaultedb ===")
+print("vaultedb is a local, encrypted database for storing sensitive documents (like JSON objects).")
 print("Each vault is a single .vault file. All data is encrypted using a key derived from a passphrase.")
 
 print("\n=== 🔐 Step 1: Create or Open a Vault ===")
-vault = VaultDB.open("example.vault", "vaultdb-demo-pass")
+vault = vaultedb.open("example.vault", "vaultedb-demo-pass")
 print("We just created a new encrypted vault file: 'example.vault'")
 print("The encryption key is derived from the passphrase you provide — no keys to manage manually!")
 
@@ -52,8 +52,8 @@ print("Notice: No sensitive data is visible. All content is encrypted.")
 
 print("\n=== 🧪 Step 5: Vault Isolation Demo ===")
 print("Now we’ll simulate a copy-paste attack. Can one vault read another vault’s data?")
-vault1 = VaultDB.open("vault1.vault", "hunter2")
-vault2 = VaultDB.open("vault2.vault", "hunter2")
+vault1 = vaultedb.open("vault1.vault", "hunter2")
+vault2 = vaultedb.open("vault2.vault", "hunter2")
 
 vault1.insert({"_id": "secret", "msg": "top secret"})
 
@@ -66,12 +66,12 @@ print("Now we try to decrypt it using vault2:")
 try:
     vault2.get("secret")
 except CryptoError:
-    print("✅ Decryption failed — VaultDB ensures that even with same passphrase, each vault is isolated.")
+    print("✅ Decryption failed — vaultedb ensures that even with same passphrase, each vault is isolated.")
     print("This protects against insider attacks, blob leaks, and key reuse risks.")
 
 print("\n=== 🪵 Step 6: Audit Logging (Optional Feature) ===")
-print("VaultDB can also log every action securely, with encrypted audit logs.")
-vault = VaultDB.open("example-logged.vault", "vaultdb-demo-pass", enable_logging=True)
+print("vaultedb can also log every action securely, with encrypted audit logs.")
+vault = vaultedb.open("example-logged.vault", "vaultedb-demo-pass", enable_logging=True)
 doc_id = vault.insert({"_id": "log1", "msg": "audit test"})
 vault.get(doc_id)
 
@@ -84,13 +84,13 @@ key_blob = vault.export_key()
 pprint(key_blob)
 
 print("\n⚠️ WARNING: If you lose this key+salt, you lose access to your vault.")
-print("VaultDB doesn't store your key — it's YOUR responsibility to back this up securely.")
+print("vaultedb doesn't store your key — it's YOUR responsibility to back this up securely.")
 
 print("\n🎉 Done! You’ve seen:")
 print("- How to create an encrypted vault")
 print("- How to insert/query documents securely")
-print("- How VaultDB prevents cross-vault attacks")
+print("- How vaultedb prevents cross-vault attacks")
 print("- How audit logging works")
 print("- How to export your key securely")
 
-print("\nVaultDB = End-to-End Privacy + Developer Simplicity.")
+print("\nvaultedb = End-to-End Privacy + Developer Simplicity.")

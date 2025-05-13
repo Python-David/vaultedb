@@ -1,8 +1,8 @@
-# VaultDB `test_encrypted_storage_find.py`: Test Plan for `.find()` Method
+# vaultedb `test_encrypted_storage_find.py`: Test Plan for `.find()` Method
 
 ## Overview
 
-This file tests VaultDB’s `.find()` method in `EncryptedStorage`. The goal is to ensure encrypted documents can be **queried naturally**, just like in Firebase or Mongo — while staying fully secure.
+This file tests vaultedb’s `.find()` method in `EncryptedStorage`. The goal is to ensure encrypted documents can be **queried naturally**, just like in Firebase or Mongo — while staying fully secure.
 
 Timi can now look up documents using simple filters, without worrying about encryption.
 
@@ -12,11 +12,11 @@ Timi can now look up documents using simple filters, without worrying about encr
 
 ### 🔎 `test_find_exact_match`
 * Timi saves two entries and wants to find only the one matching `{"name": "Alice"}`.
-* VaultDB returns one match with the correct `_id`.
+* vaultedb returns one match with the correct `_id`.
 
 ### ❌ `test_find_no_match`
 * Timi queries for a non-existent value.
-* VaultDB returns an empty list — no false positives.
+* vaultedb returns an empty list — no false positives.
 
 ### 🔁 `test_find_multiple_matches`
 * Several entries have the same tag and status.
@@ -32,7 +32,7 @@ Timi can now look up documents using simple filters, without worrying about encr
 
 ### 🎭 `test_find_type_mismatch_does_not_match`
 * A string is used to query a numeric field (`{"count": "10"}` vs actual `10`).
-* VaultDB returns no match — exact match only.
+* vaultedb returns no match — exact match only.
 
 ### 💥 `test_find_skips_corrupt_data`
 * A document in the vault is corrupted on disk.

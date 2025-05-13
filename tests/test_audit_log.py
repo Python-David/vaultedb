@@ -12,9 +12,9 @@ from cryptography.fernet import Fernet
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb.logging import VaultAuditLog
-from vaultdb.crypto import generate_salt, generate_key
-from vaultdb.errors import CryptoError
+from vaultedb.logging import VaultAuditLog
+from vaultedb.crypto import generate_salt, generate_key
+from vaultedb.errors import CryptoError
 
 
 @pytest.fixture

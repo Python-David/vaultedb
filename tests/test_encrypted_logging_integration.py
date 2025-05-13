@@ -10,10 +10,10 @@ from cryptography.fernet import Fernet
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb.encrypted_storage import EncryptedStorage
-from vaultdb.logging import VaultAuditLog
-from vaultdb.crypto import generate_key, generate_salt
-from vaultdb.errors import CryptoError
+from vaultedb.encrypted_storage import EncryptedStorage
+from vaultedb.logging import VaultAuditLog
+from vaultedb.crypto import generate_key, generate_salt
+from vaultedb.errors import CryptoError
 
 
 @pytest.fixture
@@ -188,7 +188,7 @@ def test_encrypted_storage_logs_delete(temp_vault_and_log):
 def test_logging_does_not_break_insert_on_log_failure(temp_vault_and_log, monkeypatch):
     path, _ = temp_vault_and_log
     vault = EncryptedStorage.open(path, "hunter2", enable_logging=True)
-    monkeypatch.setattr("vaultdb.logging.VaultAuditLog.log", lambda *a, **kw: (_ for _ in ()).throw(IOError("boom")))
+    monkeypatch.setattr("vaultedb.logging.VaultAuditLog.log", lambda *a, **kw: (_ for _ in ()).throw(IOError("boom")))
     doc_id = vault.insert({"name": "SafeInsert"})
     assert doc_id
 

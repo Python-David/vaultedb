@@ -1,7 +1,7 @@
-# VaultDB: storage.py Module Documentation
+# vaultedb: storage.py Module Documentation
 
 ## Overview
-`storage.py` is the foundational layer of VaultDB's local persistence engine. It handles loading and saving document data to a flat file on disk, using a JSON-based structure. This is the lowest level of interaction with Vault data and serves as the backend for higher-level operations like encryption, querying, and API access.
+`storage.py` is the foundational layer of vaultedb's local persistence engine. It handles loading and saving document data to a flat file on disk, using a JSON-based structure. This is the lowest level of interaction with Vault data and serves as the backend for higher-level operations like encryption, querying, and API access.
 
 ## Responsibilities
 * Store all documents in a single JSON file
@@ -45,7 +45,7 @@ Removes the document with the given `_id` if it exists. Returns `True` if delete
 Returns all stored documents as a list.
 
 ## File Format
-VaultDB files now use the following schema:
+vaultedb files now use the following schema:
 
 ```
 {

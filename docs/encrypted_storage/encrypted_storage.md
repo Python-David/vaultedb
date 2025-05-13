@@ -1,10 +1,10 @@
-# VaultDB: encrypted_storage.py Module Documentation
+# vaultedb: encrypted_storage.py Module Documentation
 
 ## Overview
 
 `encrypted_storage.py` wraps the low-level `DocumentStorage` to provide **transparent encryption** and **decryption** of all documents. It ensures that data is encrypted before writing to disk and decrypted only upon retrieval, using a provided key.
 
-This module enforces VaultDB’s zero-trust principle: even the raw file on disk contains no readable data, and developers don't need to manage encryption logic manually.
+This module enforces vaultedb’s zero-trust principle: even the raw file on disk contains no readable data, and developers don't need to manage encryption logic manually.
 
 ## Responsibilities
 

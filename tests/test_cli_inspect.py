@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from vaultdb import VaultDB
+from vaultedb import vaultedb
 
 def create_test_vault(doc_count=3, app_name=None):
     tf = tempfile.NamedTemporaryFile(suffix=".vault", delete=False)
@@ -14,14 +14,14 @@ def create_test_vault(doc_count=3, app_name=None):
     tf.close()
     if os.path.exists(path): os.remove(path)
 
-    vault = VaultDB.open(path, "testpass")
+    vault = vaultedb.open(path, "testpass")
     for i in range(doc_count):
         vault.insert({"_id": f"doc-{i}", "field": f"value-{i}"})
     return path
 
 def run_cli(args):
     result = subprocess.run(
-        ["python", "-m", "vaultdb.cli"] + args,
+        ["python", "-m", "vaultedb.cli"] + args,
         capture_output=True,
         text=True
     )
@@ -31,7 +31,7 @@ def run_cli(args):
 def test_inspect_basic_output():
     path = create_test_vault()
     result = run_cli(["inspect", path])
-    assert "VaultDB Inspector" in result.stdout
+    assert "vaultedb Inspector" in result.stdout
     assert "Document Count: 3" in result.stdout
     os.remove(path)
 
@@ -60,7 +60,7 @@ def test_inspect_json_output():
 def test_inspect_quiet_mode():
     path = create_test_vault()
     result = run_cli(["inspect", path, "--quiet"])
-    assert "VaultDB Inspector" not in result.stdout
+    assert "vaultedb Inspector" not in result.stdout
     assert "📁" not in result.stdout
     os.remove(path)
 

@@ -1,8 +1,8 @@
-# VaultDB `encrypted_storage.py`: User-Centered Documentation
+# vaultedb `encrypted_storage.py`: User-Centered Documentation
 
 ## Overview
 
-`encrypted_storage.py` is where VaultDB becomes magic. It wraps the low-level `storage.py` system with **transparent encryption**, ensuring that every document Timi saves is fully encrypted on disk — even if someone steals the file, they won’t read a thing.
+`encrypted_storage.py` is where vaultedb becomes magic. It wraps the low-level `storage.py` system with **transparent encryption**, ensuring that every document Timi saves is fully encrypted on disk — even if someone steals the file, they won’t read a thing.
 
 It’s the same simple Python API she’s already using — but now, her data is secure by default.
 
@@ -11,8 +11,8 @@ It’s the same simple Python API she’s already using — but now, her data is
 Timi’s journaling app is taking off. She wants her users' entries to be **private**, **trustworthy**, and **zero-config**. That’s where `EncryptedStorage` comes in. With just a passphrase and one import, she gets real encryption with no extra effort.
 
 ```python
-from vaultdb.encrypted_storage import EncryptedStorage
-from vaultdb.crypto import generate_key, generate_salt
+from vaultedb.encrypted_storage import EncryptedStorage
+from vaultedb.crypto import generate_key, generate_salt
 
 salt = generate_salt()
 key = generate_key("my-secret-pass", salt)
@@ -33,7 +33,7 @@ vault.insert({"title": "A Private Entry", "mood": "😌"})
 ```
 
 * Just like before — Timi inserts a dict.
-* VaultDB generates a UUID `_id`.
+* vaultedb generates a UUID `_id`.
 * But under the hood, the full document is encrypted using Fernet (AES-based).
 * Only `_id` is stored in plaintext so it can be looked up.
 
@@ -45,7 +45,7 @@ vault.get("abc123")
 
 * Looks up the `_id`, decrypts the blob, and gives Timi back her original dictionary.
 
-**Fails Gracefully:** If the doc doesn't exist or the data is corrupt, VaultDB returns `None` or raises a helpful `CryptoError`.
+**Fails Gracefully:** If the doc doesn't exist or the data is corrupt, vaultedb returns `None` or raises a helpful `CryptoError`.
 
 ### ✏️ 3. Updating a Document
 ### 🔍 4. Finding Documents
@@ -55,8 +55,8 @@ vault.find({"name": "Alice"})
 ```
 
 * Returns a list of all documents where all fields in the filter match exactly.
-* If Timi passes an empty dict (`{}`), VaultDB returns **all decrypted documents**.
-* If the filter is not a dictionary, VaultDB raises a `InvalidDocumentError`.
+* If Timi passes an empty dict (`{}`), vaultedb returns **all decrypted documents**.
+* If the filter is not a dictionary, vaultedb raises a `InvalidDocumentError`.
 
 **Examples:**
 ```python
@@ -106,7 +106,7 @@ vault.list(strict=False)  # best effort
 ### 💡 Transparent Encryption
 
 * Timi doesn’t need to know about AES, keys, or salts.
-* VaultDB handles encryption/decryption automatically, internally.
+* vaultedb handles encryption/decryption automatically, internally.
 
 ### 🆔 Lookup by Plaintext `_id`
 
@@ -115,7 +115,7 @@ vault.list(strict=False)  # best effort
 
 ### ⚠️ Crypto Errors Made Safe
 
-* VaultDB will raise `CryptoError` if something goes wrong — not `KeyError`, not `ValueError`.
+* vaultedb will raise `CryptoError` if something goes wrong — not `KeyError`, not `ValueError`.
 * Timi can build reliable error handling around it.
 
 ### 🧪 Encrypted On-Disk Format
@@ -150,13 +150,13 @@ with open("journal.vault", "r+") as f:
 vault.get("abc123")  # 💥 Raises CryptoError
 ```
 
-VaultDB protects Timi by refusing to decrypt unsafe or invalid data.
+vaultedb protects Timi by refusing to decrypt unsafe or invalid data.
 
 ---
 
 ## Summary
 
-VaultDB’s `encrypted_storage.py` lets Timi:
+vaultedb’s `encrypted_storage.py` lets Timi:
 
 ✅ Store sensitive documents  
 ✅ Trust that they’re secure — always  
