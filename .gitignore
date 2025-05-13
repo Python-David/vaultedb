@@ -49,3 +49,6 @@ test*.json
 *.vault
 vaultdb.json
 .coverage
+
+.env
+.pypirc
